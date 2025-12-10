@@ -1,0 +1,340 @@
+/* ===== RESET & GLOBAL ===== */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body{
+    font-family: 'SF Pro Display', sans-serif;
+    background:
+      linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)),
+      url('rice-field-bali.jpg') no-repeat fixed center;
+    background-size: cover;
+    background-position: 100% 100%;
+    min-height: 100vh;
+}
+
+/* ===== LAYOUT UTAMA ===== */
+
+.ContainerUtama{
+    margin: 0;
+    padding: 0;
+}
+
+.logo{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 10px;
+    padding: 10px;
+}
+
+.logoleafiot{
+    height: 9%;
+    width: 9%;
+}
+
+.ContainerPutih{
+    width: 100%;
+    max-width: 1200px;          /* biar di desktop nggak terlalu lebar */
+    margin: 20px auto 40px;     /* center di tengah */
+    padding: 32px;
+    border-radius: 40px;
+    background-color: white;
+
+    display: grid;
+    grid-template-columns: 3fr 2.5fr;  /* kiri lebih lebar */
+    gap: 2rem;
+}
+
+/* ===== KOLOM KIRI & KANAN ===== */
+
+.KIRI,
+.KANAN {
+    padding: 16px;
+    color: black;
+    text-align: left;
+    font-size: 16px;
+}
+
+.KANAN {
+    padding-top: 130px;   /* buang padding-top 125px yang lama */
+}
+
+/* ===== WELCOMING ===== */
+
+.welcoming{
+	margin: 0;
+}
+
+.hai--welcoming{
+    color: #FCB53B;
+    font-size: 48px;
+}
+
+.selamatdatang--welcoming{
+    color: #4C763B;
+    font-size: 48px;
+}
+
+/* ===== CAMERA ===== */
+
+.camera{
+    color:white;
+    background-color: black;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    width: 100%;        /* ikut lebar kolom kiri */
+    max-width: 800px;   /* di desktop mentok segini */
+    height: 320px;      /* boleh kamu atur lagi */
+
+    border-radius: 8px;
+    margin-top: 5px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2),
+                0 6px 20px rgba(0, 0, 0, 0.19);
+}
+
+
+/* ===== JAM – ICON – TEMPERATURE (JIT) ===== */
+
+.JIT{
+    display: grid;
+    margin-top: 10px;
+    gap: 1em;
+
+    /* Jam & Temp besar, Icon kecil di tengah */
+    grid-template-columns: 2fr 1fr 2fr;
+    grid-template-areas: "box-1 box-2 box-3";
+}
+
+/* Jam */
+.Jam{
+    grid-area: box-1;
+    font-size: 40px;
+    color: black;
+    background-color: #FCB53B;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 90px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2),
+                0 6px 20px rgba(0, 0, 0, 0.19);
+}
+
+.Icon{
+    grid-area: box-2;
+    background-color: #4C763B;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 90px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2),
+                0 6px 20px rgba(0, 0, 0, 0.19);
+}
+
+.gambaricon{
+    width: 60px;      /* ukuran icon */
+    height: auto;
+    max-width: 80%;
+}
+
+
+/* Temperature card */
+.Temperature{
+    grid-area: box-3;
+    color:black;
+    background-color: #FCB53B;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 90px;
+    border-radius: 8px;
+    padding: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2),
+                0 6px 20px rgba(0, 0, 0, 0.19);
+}
+
+.gridtemperature{
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    gap: 20px;
+}
+
+.Indicator{
+    display: flex;
+    flex-direction: column;
+}
+
+.temperaturedef, .humiditydef{
+    font-size: 16px;
+    color: black;
+}
+
+.tempindicator, .humindicator{
+    font-size: 36px;
+    color: black;
+}
+
+/* ===== POT ===== */
+
+.POT{
+    display: grid;
+    margin-top: 10px;
+    gap: 1rem;
+    grid-template-columns: repeat(4, minmax(0, 1fr));  /* 4 kolom sama besar */
+}
+
+
+.gambarpot{
+    width: 80px;
+    height: auto;
+}
+
+.POT > div{
+    background-color: #A72703;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: flex-start;
+    padding: 16px;
+    border-radius: 16px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2),
+                0 6px 20px rgba(0, 0, 0, 0.19);
+}
+
+.contentpot1,
+.contentpot2,
+.contentpot3,
+.contentpot4{
+    font-size: 18px;
+}
+
+.sudahmatang{
+    font-size: 13px;
+}
+
+.belummatang{
+    font-size: 10px;
+    padding-top: 8px;
+}
+
+.nilai-matang1, .nilai-matang2, .nilai-matang3, .nilai-matang4{
+    font-size: 20px;
+}
+
+.belum-matang1, .belum-matang2, .belum-matang3, .belum-matang4{
+    font-size: 16px;
+}
+
+/* ===== HISTORY LOG ===== */
+
+.History-Log{
+    margin-top: 16px;
+    background-color: #4C763B;
+    color: white;
+    padding-bottom: 10px;
+    padding: 25px;
+    padding-top: 10px;
+    border-radius: 16px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2),
+                0 6px 20px rgba(0,0,0,0.19);
+
+    width: 100%;               /* penuh selebar kolom kanan */
+    box-sizing: border-box;
+
+    display: flex;
+    flex-direction: column;    /* header di atas, log di bawah */
+    gap: 8px;
+}
+
+
+.header-log{
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+}
+
+.data-log{
+    color: black;
+    padding: 10px 10px;
+    min-height: 100px;
+    font-size: 14px;
+    background-color: whitesmoke;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2),
+                0 6px 20px rgba(0,0,0,0.19);
+
+    display: flex;
+    align-items: flex-start;
+}
+
+
+/* ===== RESPONSIVE: TABLET / HP ===== */
+@media (max-width: 768px) {
+  .ContainerPutih{
+    grid-template-columns: 1fr;   /* kiri & kanan jadi tumpuk */
+    padding: 20px;
+    border-radius: 24px;
+  }
+
+  .KIRI, .KANAN{
+    padding: 12px;
+  }
+
+  .camera{
+    height: 220px;                /* sedikit dipendekin di HP */
+  }
+
+  /* Jam, Temp besar, icon kecil di bawah */
+  .JIT{
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "box-1"
+      "box-3"
+      "box-2";
+  }
+
+  .Jam{
+    font-size: 26px;
+  }
+
+  .Temperature{
+    font-size: 18px;
+  }
+
+  .gambaricon{
+    width: 48px;                  /* icon lebih kecil lagi di HP */
+  }
+
+  .POT{
+    grid-template-columns: repeat(2, minmax(0, 1fr));  /* selalu 2 kolom */
+  }
+
+  .POT > div{
+    padding: 10px;
+    font-size: 12px;       /* kecilin teks biar muat */
+  }
+
+    .contentpot1,
+  .contentpot2,
+  .contentpot3,
+  .contentpot4{
+    font-size: 14px;
+  }
+
+  .nilai-matang1,
+  .nilai-matang2,
+  .nilai-matang3,
+  .nilai-matang4{
+    font-size: 16px;
+  }
+}
