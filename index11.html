@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LeafIot Dashboard</title>
+  <link rel="stylesheet" href="index11.css" />
+  <link href="https://fonts.cdnfonts.com/css/sf-pro-display" rel="stylesheet" />
+  <link rel="shortcut icon" href="tnamn.png" type="image/x-icon" />
+</head>
+<body>
+  <div class="page">
+    <!-- HEADER / LOGO -->
+    <header class="logo-bar">
+      <img src="logoleafiot.png" alt="LeafIot Logo" class="logo-img" />
+    </header>
+
+    <!-- KARTU PUTIH UTAMA -->
+    <main class="main-card">
+      <!-- KIRI -->
+      <section class="left-panel">
+        <!-- WELCOME -->
+        <section class="welcome-block">
+          <h1 class="welcome-title">
+            <span class="welcome-hai">Hai,</span><br />
+            <span class="welcome-selamat">Selamat Datang</span>
+          </h1>
+        </section>
+
+        <!-- CAMERA -->
+        <section class="camera-block">
+          <div class="camera-label">Camera</div>
+          <div class="camera-frame">
+            <img id="camera-stream" alt="Camera Stream" />
+          </div>
+        </section>
+
+        <!-- JAM + ICON + TEMP/HUM -->
+        <section class="jit-row">
+          <div class="jit-card jit-time">
+            <div class="jit-time-icon">🕒</div>
+            <div class="jit-time-text">
+              <span id="time-value">--:-- WIB</span>
+            </div>
+          </div>
+
+          <div class="jit-card jit-icon">
+            <img src="smart-farming.png" alt="Smart Farming Icon" />
+          </div>
+
+          <div class="jit-card jit-temp">
+            <div class="jit-temp-labels">
+              <span class="jit-temp-title">Temperature:</span>
+              <span class="jit-temp-value" id="temp-value"><b>-- °C</b></span>
+            </div>
+            <div class="jit-temp-labels">
+              <span class="jit-temp-title">Humidity:</span>
+              <span class="jit-temp-value" id="hum-value"><b>-- %</b></span>
+            </div>
+          </div>
+        </section>
+      </section>
+
+      <!-- KANAN -->
+      <section class="right-panel">
+        <!-- ROW POT -->
+        <section class="pots-row">
+          <!-- POT 1 -->
+          <article class="pot-card">
+            <div class="pot-header">Pot 1</div>
+            <div class="pot-body">
+              <div class="pot-line">
+                <span>Sudah Matang:</span>
+                <div class="pot-value nilai-matang1"><b>0 Buah</b></div>
+              </div>
+              <div class="pot-line">
+                <span>Belum Matang:</span>
+                <div class="pot-value belum-matang1"><b>0 Buah</b></div>
+              </div>
+            </div>
+            <img src="cabai.png" alt="Chili" class="pot-image" />
+          </article>
+
+          <!-- POT 2 -->
+          <article class="pot-card">
+            <div class="pot-header">Pot 2</div>
+            <div class="pot-body">
+              <div class="pot-line">
+                <span>Sudah Matang:</span>
+                <div class="pot-value nilai-matang2"><b>0 Buah</b></div>
+              </div>
+              <div class="pot-line">
+                <span>Belum Matang:</span>
+                <div class="pot-value belum-matang2"><b>0 Buah</b></div>
+              </div>
+            </div>
+            <img src="cabai.png" alt="Chili" class="pot-image" />
+          </article>
+
+          <!-- POT 3 -->
+          <article class="pot-card">
+            <div class="pot-header">Pot 3</div>
+            <div class="pot-body">
+              <div class="pot-line">
+                <span>Sudah Matang:</span>
+                <div class="pot-value nilai-matang3"><b>0 Buah</b></div>
+              </div>
+              <div class="pot-line">
+                <span>Belum Matang:</span>
+                <div class="pot-value belum-matang3"><b>0 Buah</b></div>
+              </div>
+            </div>
+            <img src="cabai.png" alt="Chili" class="pot-image" />
+          </article>
+
+          <!-- POT 4 -->
+          <article class="pot-card">
+            <div class="pot-header">Pot 4</div>
+            <div class="pot-body">
+              <div class="pot-line">
+                <span>Sudah Matang:</span>
+                <div class="pot-value nilai-matang4"><b>0 Buah</b></div>
+              </div>
+              <div class="pot-line">
+                <span>Belum Matang:</span>
+                <div class="pot-value belum-matang4"><b>0 Buah</b></div>
+              </div>
+            </div>
+            <img src="cabai.png" alt="Chili" class="pot-image" />
+          </article>
+        </section>
+
+        <!-- HISTORY LOG -->
+        <section class="history-block">
+          <div class="history-header">History Log:</div>
+          <div class="history-body data-log" id="history-log">
+            Belum ada data...
+          </div>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    // GANTI ini dengan IP/domain + port backend FastAPI kamu
+    const API_BASE = "http://leafiot.ksmiotupnvj.com:8000";
+
+    async function fetchJSON(path) {
+      const res = await fetch(API_BASE + path);
+      if (!res.ok) {
+        throw new Error("HTTP " + res.status);
+      }
+      return res.json();
+    }
+
+    function refreshCamera() {
+      const img = document.getElementById("camera-stream");
+      if (!img) return;
+      img.src = API_BASE + "/chili/image?t=" + Date.now();
+    }
+
+    async function refreshDHT() {
+      try {
+        const data = await fetchJSON("/sensor/dht");
+        const tempEl = document.getElementById("temp-value");
+        const humEl = document.getElementById("hum-value");
+
+        if (tempEl) {
+          const t =
+            data.temperature !== null && data.temperature !== undefined
+              ? data.temperature.toFixed(1) + "°C"
+              : "-- °C";
+          tempEl.innerHTML = "<b>" + t + "</b>";
+        }
+
+        if (humEl) {
+          const h =
+            data.humidity !== null && data.humidity !== undefined
+              ? data.humidity.toFixed(1) + "%"
+              : "-- %";
+          humEl.innerHTML = "<b>" + h + "</b>";
+        }
+      } catch (err) {
+        console.error("Error refreshDHT:", err);
+      }
+    }
+
+    async function refreshTime() {
+      try {
+        const data = await fetchJSON("/device/time");
+        const timeEl = document.getElementById("time-value");
+        if (timeEl) {
+          const label = data.last_datetime
+            ? data.last_datetime + " (" + (data.last_device || "Device") + ")"
+            : "--:-- WIB";
+          timeEl.textContent = label;
+        }
+      } catch (err) {
+        console.error("Error refreshTime:", err);
+      }
+    }
+
+    async function refreshChiliStatus() {
+      try {
+        const data = await fetchJSON("/chili/status");
+        const historyEl = document.getElementById("history-log");
+        if (historyEl) {
+          const now = new Date().toLocaleString("id-ID");
+          const line =
+            `[${now}] total=${data.total_detected}, ` +
+            `ripe=${data.ripe}, unripe=${data.unripe}, ` +
+            `last_pred=${data.last_pred} (0=matang,1=belum,-1=tidak ada)`;
+
+          const maxLines = 50;
+          const existing = historyEl.innerHTML
+            .split("<br>")
+            .filter((l) => l.trim() !== "");
+
+          const newHtml = [line, ...existing].slice(0, maxLines).join("<br>");
+          historyEl.innerHTML = newHtml;
+        }
+
+        // nanti kalau sudah ada endpoint /chili/pots,
+        // di sini bisa update nilai-matang1..4 dan belum-matang1..4
+      } catch (err) {
+        console.error("Error refreshChiliStatus:", err);
+      }
+    }
+
+    function startDashboard() {
+      refreshCamera();
+      refreshDHT();
+      refreshTime();
+      refreshChiliStatus();
+
+      setInterval(refreshCamera, 3000);
+      setInterval(refreshDHT, 5000);
+      setInterval(refreshTime, 7000);
+      setInterval(refreshChiliStatus, 8000);
+    }
+
+    document.addEventListener("DOMContentLoaded", startDashboard);
+  </script>
+</body>
+</html>
