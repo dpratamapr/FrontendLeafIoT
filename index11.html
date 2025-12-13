@@ -243,55 +243,22 @@
   // Ambil data dari /pot/result dan isi kartu POT 1–4
   async function refreshPotResult() {
     try {
+      // ambil data dari backend
       const data = await fetchJSON("/pot/result");
+      console.log("pot/result =>", data);
 
-      // ====== TEBAKAN BENTUK DATA ======
-      // Coba handle beberapa kemungkinan bentuk JSON:
-      // 1) [{ pot: 1, ripe: 3, unripe: 2 }, ...]
-      // 2) { pots: [ ... ] }
-      // 3) { data: [ ... ] }
-      // 4) { pot: 1, ripe: 3, unripe: 2 } (single object)
-      let pots = [];
+      // data expected: { "1": {ripe, unripe}, "2": {...}, ... }
+      const potIds = [1, 2, 3, 4];
 
-      if (Array.isArray(data)) {
-        pots = data;
-      } else if (Array.isArray(data.pots)) {
-        pots = data.pots;
-      } else if (Array.isArray(data.data)) {
-        pots = data.data;
-      } else if (data && typeof data === "object") {
-        pots = [data];
-      }
+      potIds.forEach((potId) => {
+        // coba akses pakai key number dan string (backend bisa kirim "1" atau 1)
+        const row = data[potId] || data[String(potId)] || null;
 
-      pots.forEach((item) => {
-        // cari nomor pot di berbagai nama field yang mungkin
-        const potIndex =
-          item.pot ??
-          item.pot_id ??
-          item.pot_number ??
-          item.id ??
-          item.no ??
-          item.no_pot;
+        const ripe = row && typeof row.ripe === "number" ? row.ripe : 0;
+        const unripe = row && typeof row.unripe === "number" ? row.unripe : 0;
 
-        if (!potIndex) return;
-
-        const ripe =
-          item.ripe ??
-          item.ripe_count ??
-          item.ripe_chili ??
-          item.count_ripe ??
-          0;
-
-        const unripe =
-          item.unripe ??
-          item.unripe_count ??
-          item.unripe_chili ??
-          item.count_unripe ??
-          0;
-
-        // .nilai-matang1, .belum-matang1, dst
-        const matangEl = document.querySelector(".nilai-matang" + potIndex);
-        const belumEl = document.querySelector(".belum-matang" + potIndex);
+        const matangEl = document.querySelector(".nilai-matang" + potId);
+        const belumEl = document.querySelector(".belum-matang" + potId);
 
         if (matangEl) {
           matangEl.innerHTML = "<b>" + ripe + " Buah</b>";
@@ -326,5 +293,6 @@
 </script>
 </body>
 </html>
+
 
 
