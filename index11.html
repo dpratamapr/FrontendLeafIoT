@@ -263,35 +263,70 @@
   /* ================== POT PER-POT ================== */
   // Ambil data dari /pot/result dan isi kartu POT 1–4
   async function refreshPotResult() {
-    try {
-      // ambil data dari backend
-      const data = await fetchJSON("/pot/result");
-      console.log("pot/result =>", data);
+  try {
+    // Ambil seluruh riwayat pot dari backend
+    const data = await fetchJSON("/pot/db");
+    console.log("pot/db =>", data);
 
-      // data expected: { "1": {ripe, unripe}, "2": {...}, ... }
-      const potIds = [1, 2, 3, 4];
+    const latestByPot = {};
 
-      potIds.forEach((potId) => {
-        // coba akses pakai key number dan string (backend bisa kirim "1" atau 1)
-        const row = data[potId] || data[String(potId)] || null;
+    if (Array.isArray(data)) {
+      data.forEach((row) => {
+        const potId =
+          row.pot ??
+          row.pot_id ??
+          row.pot_number ??
+          row.no_pot;
 
-        const ripe = row && typeof row.ripe === "number" ? row.ripe : 0;
-        const unripe = row && typeof row.unripe === "number" ? row.unripe : 0;
+        if (!potId) return;
 
-        const matangEl = document.querySelector(".nilai-matang" + potId);
-        const belumEl = document.querySelector(".belum-matang" + potId);
+        const current = latestByPot[potId];
 
-        if (matangEl) {
-          matangEl.innerHTML = "<b>" + ripe + " Buah</b>";
-        }
-        if (belumEl) {
-          belumEl.innerHTML = "<b>" + unripe + " Buah</b>";
+        // Fungsi bantu: parse timestamp (kalau gagal, pakai 0)
+        const parseTime = (x) =>
+          x ? Date.parse(x) || 0 : 0;
+
+        if (!current) {
+          // belum ada data untuk pot ini → langsung isi
+          latestByPot[potId] = row;
+        } else {
+          // pilih yang lebih baru: bandingkan timestamp atau id
+          const curTime = parseTime(row.timestamp || row.created_at || row.time);
+          const prevTime = parseTime(
+            current.timestamp || current.created_at || current.time
+          );
+
+          const curId = typeof row.id === "number" ? row.id : 0;
+          const prevId = typeof current.id === "number" ? current.id : 0;
+
+          if (curTime > prevTime || (curTime === prevTime && curId > prevId)) {
+            latestByPot[potId] = row;
+          }
         }
       });
-    } catch (err) {
-      console.error("Error refreshPotResult:", err);
     }
+
+    // Update kartu POT 1–4
+    [1, 2, 3, 4].forEach((potId) => {
+      const r = latestByPot[potId];
+
+      const ripe = r ? Number(r.ripe ?? r.ripe_count ?? 0) || 0 : 0;
+      const unripe = r ? Number(r.unripe ?? r.unripe_count ?? 0) || 0 : 0;
+
+      const matangEl = document.querySelector(".nilai-matang" + potId);
+      const belumEl = document.querySelector(".belum-matang" + potId);
+
+      if (matangEl) {
+        matangEl.innerHTML = "<b>" + ripe + " Buah</b>";
+      }
+      if (belumEl) {
+        belumEl.innerHTML = "<b>" + unripe + " Buah</b>";
+      }
+    });
+  } catch (err) {
+    console.error("Error refreshPotResult:", err);
   }
+}
 
   /* ================== START DASHBOARD ================== */
   function startDashboard() {
@@ -314,6 +349,7 @@
 </script>
 </body>
 </html>
+
 
 
 
