@@ -142,104 +142,188 @@
   </div>
 
   <script>
-    // GANTI ini dengan IP/domain + port backend FastAPI kamu
-    const API_BASE = "http://leafiot.ksmiotupnvj.com:8000";
+  // GANTI sesuai IP/domain backend FastAPI kamu
+  const API_BASE = "http://localhost:8000";
 
-    async function fetchJSON(path) {
-      const res = await fetch(API_BASE + path);
-      if (!res.ok) {
-        throw new Error("HTTP " + res.status);
+  async function fetchJSON(path, options = {}) {
+    const res = await fetch(API_BASE + path, options);
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status} for ${path}`);
+    }
+    return res.json();
+  }
+
+  /* ================== CAMERA ================== */
+  function refreshCamera() {
+    const img = document.getElementById("camera-stream");
+    if (!img) return;
+
+    // tambahkan timestamp biar nggak ke-cache
+    img.src = API_BASE + "/chili/image?t=" + Date.now();
+  }
+
+  /* ================== DHT (TEMP & HUMID) ================== */
+  async function refreshDHT() {
+    try {
+      // SESUAIKAN path jika di backend beda (misal /dht)
+      const data = await fetchJSON("/sensor/dht");
+
+      const tempEl = document.getElementById("temp-value");
+      const humEl = document.getElementById("hum-value");
+
+      if (tempEl) {
+        const t =
+          data.temperature !== null && data.temperature !== undefined
+            ? data.temperature.toFixed(1) + "°C"
+            : "-- °C";
+        tempEl.innerHTML = "<b>" + t + "</b>";
       }
-      return res.json();
-    }
 
-    function refreshCamera() {
-      const img = document.getElementById("camera-stream");
-      if (!img) return;
-      img.src = API_BASE + "/chili/image?t=" + Date.now();
-    }
-
-    async function refreshDHT() {
-      try {
-        const data = await fetchJSON("/sensor/dht");
-        const tempEl = document.getElementById("temp-value");
-        const humEl = document.getElementById("hum-value");
-
-        if (tempEl) {
-          const t =
-            data.temperature !== null && data.temperature !== undefined
-              ? data.temperature.toFixed(1) + "°C"
-              : "-- °C";
-          tempEl.innerHTML = "<b>" + t + "</b>";
-        }
-
-        if (humEl) {
-          const h =
-            data.humidity !== null && data.humidity !== undefined
-              ? data.humidity.toFixed(1) + "%"
-              : "-- %";
-          humEl.innerHTML = "<b>" + h + "</b>";
-        }
-      } catch (err) {
-        console.error("Error refreshDHT:", err);
+      if (humEl) {
+        const h =
+          data.humidity !== null && data.humidity !== undefined
+            ? data.humidity.toFixed(1) + "%"
+            : "-- %";
+        humEl.innerHTML = "<b>" + h + "</b>";
       }
+    } catch (err) {
+      console.error("Error refreshDHT:", err);
     }
+  }
 
-    async function refreshTime() {
-      try {
-        const data = await fetchJSON("/device/time");
-        const timeEl = document.getElementById("time-value");
-        if (timeEl) {
-          const label = data.last_datetime
-            ? data.last_datetime + " (" + (data.last_device || "Device") + ")"
-            : "--:-- WIB";
-          timeEl.textContent = label;
-        }
-      } catch (err) {
-        console.error("Error refreshTime:", err);
+  /* ================== WAKTU ================== */
+  async function refreshTime() {
+    try {
+      // SESUAIKAN path kalau di backend beda
+      const data = await fetchJSON("/device/time");
+      const timeEl = document.getElementById("time-value");
+      if (!timeEl) return;
+
+      const label = data.last_datetime
+        ? `${data.last_datetime} (${data.last_device || "Device"})`
+        : "--:-- WIB";
+
+      timeEl.textContent = label;
+    } catch (err) {
+      console.error("Error refreshTime:", err);
+    }
+  }
+
+  /* ================== GLOBAL CHILI STATUS (HISTORY LOG) ================== */
+  async function refreshChiliStatus() {
+    try {
+      // SESUAIKAN path kalau nama endpoint beda di backend
+      const data = await fetchJSON("/chili/status");
+      const historyEl = document.getElementById("history-log");
+      if (!historyEl) return;
+
+      const now = new Date().toLocaleString("id-ID");
+      const total = data.total_detected ?? data.total ?? 0;
+      const ripe = data.ripe ?? 0;
+      const unripe = data.unripe ?? 0;
+      const lastPred = data.last_pred ?? -1;
+
+      const line =
+        `[${now}] total=${total}, ripe=${ripe}, unripe=${unripe}, ` +
+        `last_pred=${lastPred} (0=matang,1=belum,-1=tidak ada)`;
+
+      const existing = historyEl.innerHTML
+        .split("<br>")
+        .filter((l) => l.trim() !== "");
+
+      const maxLines = 50;
+      const newHtml = [line, ...existing].slice(0, maxLines).join("<br>");
+      historyEl.innerHTML = newHtml;
+    } catch (err) {
+      console.error("Error refreshChiliStatus:", err);
+    }
+  }
+
+  /* ================== POT PER-POT ================== */
+  // Ambil data dari /pot/result dan isi kartu POT 1–4
+  async function refreshPotResult() {
+    try {
+      const data = await fetchJSON("/pot/result");
+
+      // ====== TEBAKAN BENTUK DATA ======
+      // Coba handle beberapa kemungkinan bentuk JSON:
+      // 1) [{ pot: 1, ripe: 3, unripe: 2 }, ...]
+      // 2) { pots: [ ... ] }
+      // 3) { data: [ ... ] }
+      // 4) { pot: 1, ripe: 3, unripe: 2 } (single object)
+      let pots = [];
+
+      if (Array.isArray(data)) {
+        pots = data;
+      } else if (Array.isArray(data.pots)) {
+        pots = data.pots;
+      } else if (Array.isArray(data.data)) {
+        pots = data.data;
+      } else if (data && typeof data === "object") {
+        pots = [data];
       }
-    }
 
-    async function refreshChiliStatus() {
-      try {
-        const data = await fetchJSON("/chili/status");
-        const historyEl = document.getElementById("history-log");
-        if (historyEl) {
-          const now = new Date().toLocaleString("id-ID");
-          const line =
-            `[${now}] total=${data.total_detected}, ` +
-            `ripe=${data.ripe}, unripe=${data.unripe}, ` +
-            `last_pred=${data.last_pred} (0=matang,1=belum,-1=tidak ada)`;
+      pots.forEach((item) => {
+        // cari nomor pot di berbagai nama field yang mungkin
+        const potIndex =
+          item.pot ??
+          item.pot_id ??
+          item.pot_number ??
+          item.id ??
+          item.no ??
+          item.no_pot;
 
-          const maxLines = 50;
-          const existing = historyEl.innerHTML
-            .split("<br>")
-            .filter((l) => l.trim() !== "");
+        if (!potIndex) return;
 
-          const newHtml = [line, ...existing].slice(0, maxLines).join("<br>");
-          historyEl.innerHTML = newHtml;
+        const ripe =
+          item.ripe ??
+          item.ripe_count ??
+          item.ripe_chili ??
+          item.count_ripe ??
+          0;
+
+        const unripe =
+          item.unripe ??
+          item.unripe_count ??
+          item.unripe_chili ??
+          item.count_unripe ??
+          0;
+
+        // .nilai-matang1, .belum-matang1, dst
+        const matangEl = document.querySelector(".nilai-matang" + potIndex);
+        const belumEl = document.querySelector(".belum-matang" + potIndex);
+
+        if (matangEl) {
+          matangEl.innerHTML = "<b>" + ripe + " Buah</b>";
         }
-
-        // nanti kalau sudah ada endpoint /chili/pots,
-        // di sini bisa update nilai-matang1..4 dan belum-matang1..4
-      } catch (err) {
-        console.error("Error refreshChiliStatus:", err);
-      }
+        if (belumEl) {
+          belumEl.innerHTML = "<b>" + unripe + " Buah</b>";
+        }
+      });
+    } catch (err) {
+      console.error("Error refreshPotResult:", err);
     }
+  }
 
-    function startDashboard() {
-      refreshCamera();
-      refreshDHT();
-      refreshTime();
-      refreshChiliStatus();
+  /* ================== START DASHBOARD ================== */
+  function startDashboard() {
+    // Jalankan sekali di awal
+    refreshCamera();
+    refreshDHT();
+    refreshTime();
+    refreshChiliStatus();
+    refreshPotResult();
 
-      setInterval(refreshCamera, 3000);
-      setInterval(refreshDHT, 5000);
-      setInterval(refreshTime, 7000);
-      setInterval(refreshChiliStatus, 8000);
-    }
+    // Lalu jalankan berkala
+    setInterval(refreshCamera, 3000);        // refresh gambar tiap 3 detik
+    setInterval(refreshDHT, 5000);           // DHT tiap 5 detik
+    setInterval(refreshTime, 7000);          // waktu tiap 7 detik
+    setInterval(refreshChiliStatus, 8000);   // log global tiap 8 detik
+    setInterval(refreshPotResult, 8000);     // pot per-pot tiap 8 detik
+  }
 
-    document.addEventListener("DOMContentLoaded", startDashboard);
-  </script>
+  document.addEventListener("DOMContentLoaded", startDashboard);
+</script>
 </body>
 </html>
+
