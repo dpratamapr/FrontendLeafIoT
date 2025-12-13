@@ -192,22 +192,21 @@
   }
 
   /* ================== WAKTU ================== */
-  async function refreshTime() {
-    try {
-      // SESUAIKAN path kalau di backend beda
-      const data = await fetchJSON("/device/time");
-      const timeEl = document.getElementById("time-value");
-      if (!timeEl) return;
+  function refreshTime() {
+  const timeEl = document.getElementById("time-value");
+  if (!timeEl) return;
 
-      const label = data.last_datetime
-        ? `${data.last_datetime} (${data.last_device || "Device"})`
-        : "--:-- WIB";
+  const now = new Date();
 
-      timeEl.textContent = label;
-    } catch (err) {
-      console.error("Error refreshTime:", err);
-    }
-  }
+  // konversi ke UTC lalu ke WIB (UTC+7)
+  const utcMillis = now.getTime() + now.getTimezoneOffset() * 60000;
+  const wib = new Date(utcMillis + 7 * 60 * 60 * 1000);
+
+  const hh = String(wib.getHours()).padStart(2, "0");
+  const mm = String(wib.getMinutes()).padStart(2, "0");
+
+  timeEl.textContent = `${hh}:${mm} WIB`;
+}
 
   /* ================== GLOBAL CHILI STATUS (HISTORY LOG) ================== */
   async function refreshChiliStatus() {
@@ -349,6 +348,7 @@
 </script>
 </body>
 </html>
+
 
 
 
