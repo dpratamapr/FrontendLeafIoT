@@ -134,7 +134,7 @@
         <section class="history-block">
           <div class="history-header">History Log:</div>
           <div class="history-body data-log" id="history-log">
-            Belum ada data...
+            Loading data...
           </div>
         </section>
       </section>
@@ -210,30 +210,54 @@
 
   /* ================== GLOBAL CHILI STATUS (HISTORY LOG) ================== */
    async function refreshChiliStatus() {
-      try {
-        // ambil log langsung dari endpoint /log
-        const data = await fetchJSON("/log");
-        const historyEl = document.getElementById("history-log");
-        if (!historyEl) return;
+  try {
+    // Ambil sekaligus: status global + riwayat pot
+    const [chili, potDb] = await Promise.all([
+      fetchJSON("/chili/status"),
+      fetchJSON("/pot/db"),
+    ]);
 
-        // kalau tidak ada data
-        if (!Array.isArray(data) || data.length === 0) {
-          historyEl.textContent = "Belum ada data.";
-          return;
-        }
+    const historyEl = document.getElementById("history-log");
+    if (!historyEl) return;
 
-        // batasi misalnya 50 baris terakhir
-        const maxLines = 50;
-        const lines = data.slice(-maxLines);
+    const now = new Date().toLocaleString("id-ID");
 
-        // tampilkan tiap item sebagai 1 baris
-        historyEl.innerHTML = lines
-          .map((line) => String(line))
-          .join("<br>");
-      } catch (err) {
-        console.error("Error refreshChiliStatus:", err);
-      }
+    const total = chili.total_detected ?? chili.total ?? 0;
+    const ripe = chili.ripe ?? 0;
+    const unripe = chili.unripe ?? 0;
+    const lastPred = chili.last_pred ?? -1;
+
+    // Cari last scanned pot dari /pot/db (entry terakhir)
+    let lastPot = "-";
+    if (Array.isArray(potDb) && potDb.length > 0) {
+      const last = potDb[potDb.length - 1];
+      lastPot =
+        last.pot ??
+        last.pot_id ??
+        last.pot_number ??
+        last.no_pot ??
+        "-";
     }
+
+    // Tambahkan info pot ke baris log
+    const line =
+      `[${now}] ` +
+      `pot=${lastPot}, ` +
+      `total=${total}, ` +
+      `ripe=${ripe}, unripe=${unripe}, ` +
+      `last_pred=${lastPred} (0=matang,1=belum,-1=tidak ada)`;
+
+    const existing = historyEl.innerHTML
+      .split("<br>")
+      .filter((l) => l.trim() !== "");
+
+    const maxLines = 50;
+    const newHtml = [line, ...existing].slice(0, maxLines).join("<br>");
+    historyEl.innerHTML = newHtml;
+  } catch (err) {
+    console.error("Error refreshChiliStatus:", err);
+  }
+}
 
   /* ================== POT PER-POT ================== */
   // Ambil data dari /pot/result dan isi kartu POT 1–4
@@ -324,6 +348,7 @@
 </script>
 </body>
 </html>
+
 
 
 
